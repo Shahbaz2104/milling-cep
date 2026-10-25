@@ -534,6 +534,7 @@ recall, and the recommended use is a human-in-the-loop alarm, not an automatic s
 | Unseen-case demonstration | Held-out experiments P002 and P108 (Section 8) |
 | Reproducible notebook | `notebooks/milling_cep_analysis.ipynb` (executed end to end, 0 errors) |
 | Interactive dashboard | `dashboard/app.py` (Streamlit, six tabs, threshold slider, scoring, upload) |
+| Live dashboard | <https://milling-cep-iguwxgwerngzavkpz2aguj.streamlit.app> |
 | Tableau workbook support | `dashboard/tableau/*.csv` + `dashboard/tableau/README.md` build guide |
 | Technical report | `reports/TECHNICAL_REPORT.md` / `.pdf` |
 | Presentation | `reports/presentation/MILLING_CEP_SLIDES.pptx` / `.pdf` (13 slides) |

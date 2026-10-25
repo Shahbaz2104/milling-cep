@@ -3,10 +3,40 @@
 Detecting non-optimal CNC milling conditions (RDOC = 8 mm) from accelerometer and
 spindle/drive-current statistics.
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://milling-cep-iguwxgwerngzavkpz2aguj.streamlit.app)
+
 **ME-446 Artificial Intelligence & Internet of Things — Complex Engineering Problem, Fall 2026**
 Department of Mechanical Engineering, NED University of Engineering and Technology, Karachi.
 
 ---
+
+## Live dashboard
+
+**https://milling-cep-iguwxgwerngzavkpz2aguj.streamlit.app**
+
+The app is deployed on **Streamlit Community Cloud** (free). No secrets, database or API
+key is required: it reads the committed model and data artifacts.
+
+To deploy another copy:
+
+1. Open the [deploy page](https://share.streamlit.io/deploy?repository=https://github.com/Shahbaz2104/milling-cep&branch=main&mainModule=dashboard/app.py)
+   and sign in with GitHub.
+2. If the fields are not prefilled, enter:
+   - Repository: `Shahbaz2104/milling-cep`
+   - Branch: `main`
+   - Main file path: `dashboard/app.py`
+3. Choose the Python version **3.12** in Advanced settings.
+4. Pick a subdomain such as `milling-condition-monitor`, then click **Deploy**.
+
+The app is usually live in a few minutes at
+`https://<your-subdomain>.streamlit.app`. Free apps sleep after inactivity and wake on the
+first visit. Logs are visible only to GitHub users with write access to the repository.
+
+**Alternative:** any container host works. The start command is:
+
+```bash
+streamlit run dashboard/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+```
 
 ## The problem
 
@@ -74,7 +104,8 @@ Python 3.12 is used. Create a virtual environment and install the pinned depende
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.txt        # runtime + dashboard
+# pip install -r requirements-dev.txt  # notebook, report and slide tooling
 ```
 
 Reproduce the pipeline from the project root:

@@ -465,7 +465,8 @@ def main() -> None:
         top = 2.75 + i * 0.72
         textbox(s, 0.88, top, 2.5, 0.3, title, size=12, color=RGBColor(0x9F, 0xC6, 0xDE), bold=True)
         textbox(s, 3.45, top, 8.8, 0.3, body, size=11, color=WHITE)
-    textbox(s, 0.85, 6.45, 11.7, 0.5, "github.com/Shahbaz2104/milling-cep  ·  Questions", size=11, color=RGBColor(0xB7, 0xCB, 0xD9))
+    textbox(s, 0.85, 6.28, 11.7, 0.35, "Live dashboard:  milling-cep-iguwxgwerngzavkpz2aguj.streamlit.app", size=10.5, color=RGBColor(0x9F, 0xC6, 0xDE), bold=True)
+    textbox(s, 0.85, 6.65, 11.7, 0.35, "github.com/Shahbaz2104/milling-cep  ·  Questions", size=10.5, color=RGBColor(0xB7, 0xCB, 0xD9))
 
     out = OUT_DIR / "MILLING_CEP_SLIDES.pptx"
     prs.save(out)

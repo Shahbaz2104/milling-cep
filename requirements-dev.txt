@@ -1,0 +1,8 @@
+-r requirements.txt
+
+# Reproducible notebook, report and slide generation
+jupyter==1.1.1
+nbformat==5.11.1
+nbconvert==7.17.2
+markdown==3.11.2
+python-pptx==1.0.2
