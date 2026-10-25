@@ -1,0 +1,17 @@
+Proposed title: Unsupervised Machine Learning for Discovering Vibration and Current Patterns in Milling Operations
+
+
+
+Option 2: Operating Condition & Safety Classification (Classification)
+The dataset contains runs performed under "optimal" settings (Radial Depth of Cut RDOC = 4.5mm) and "non-optimal/dangerous" settings (RDOC = 8mm). We can build a classification model to automatically detect if the machine is operating under dangerous parameters based purely on its sensor readings.
+
+Why it's different: This is a process-monitoring approach rather than tool-monitoring. We are building an AI safety net that classifies machining parameters in real-time.
+
+Target Variable: RDOC (treated as a categorical class: Optimal vs. Non-Optimal).
+
+Input Features: Accelerometer and current sensor statistics, plus FeedRate and ToolRotation.
+
+
+
+Dataset title:A new open dataset from a milling process – data for classification and estimation of tool lifeDataset link / original source:https://www.nature.com/articles/s41597-025-04923-yBrief description of the dataset:
+This dataset contains high-dimensional sensor data (multi-axis spindle vibrations and electrical current draw) recorded during 968 CNC milling cycles. To strictly comply with the requirement for a novel analysis, our group will not predict tool wear as the original authors did. Instead, we will perform a classification task to detect non-optimal or dangerous machining parameters. We will treat the Radial Depth of Cut (RDOC) as a categorical target variable to classify whether the machine is operating under stable conditions versus aggressive, high-risk settings. The input features will include statistical extractions (mean, standard deviation, kurtosis) from the accelerometer and motor load sensors. This approach models an AI-based safety monitoring system for industrial machining, fulfilling the CEP requirement for problem analysis without replicating the source paper's methodology.   

@@ -1,0 +1,1146 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Milling Condition Safety Monitor — Technical Report</title><style>
+@page { size: A4; margin: 17mm 16mm 18mm 16mm; }
+body { font-family: "DejaVu Serif", Georgia, serif; font-size: 10.3pt; line-height: 1.45; color: #1b1b1b; margin: 0; }
+h1 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 21pt; line-height: 1.15; color: #173a52; margin: 0 0 4px 0; }
+h2 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 14pt; color: #1f3b52; border-bottom: 1.5px solid #2E86AB; padding-bottom: 3px; margin-top: 24px; page-break-after: avoid; }
+h3 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11.4pt; color: #243b4a; margin-top: 16px; page-break-after: avoid; }
+p { margin: 6px 0; text-align: justify; }
+img { max-width: 100%; max-height: 205mm; display: block; margin: 10px auto; page-break-inside: avoid; }
+table { border-collapse: collapse; width: 100%; font-size: 8.4pt; margin: 8px 0 14px 0; page-break-inside: avoid; }
+th { background: #eaf2f8; text-align: left; font-family: "DejaVu Sans", Arial, sans-serif; }
+th, td { border: 1px solid #c6d2dc; padding: 4px 6px; vertical-align: top; }
+code { font-family: "DejaVu Sans Mono", monospace; font-size: 8.3pt; background: #f2f5f7; }
+pre { background: #f6f8fa; border: 1px solid #e1e6eb; padding: 9px; font-size: 8.2pt; page-break-inside: avoid; white-space: pre-wrap; }
+blockquote { border-left: 3px solid #2E86AB; margin-left: 0; padding-left: 10px; color: #444; }
+hr { border: none; border-top: 1px solid #d5dde4; margin: 16px 0; }
+a { color: #1f5f8b; text-decoration: none; }
+ul, ol { margin: 6px 0 6px 20px; }
+li { margin: 2px 0; }
+</style></head><body><h1>Milling Condition Safety Monitor</h1>
+<h2>Detecting Non-Optimal Cutting Parameters from Vibration and Current Signals</h2>
+<p><strong>ME-446 Artificial Intelligence &amp; Internet of Things — Complex Engineering Problem, Fall 2026</strong>
+Department of Mechanical Engineering, NED University of Engineering and Technology, Karachi</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Group</strong></td>
+<td>____________________</td>
+</tr>
+<tr>
+<td><strong>Group members</strong></td>
+<td>____________________</td>
+</tr>
+<tr>
+<td><strong>Submitted to</strong></td>
+<td>Course teacher, ME-446</td>
+</tr>
+<tr>
+<td><strong>Submission date</strong></td>
+<td>04 November 2026</td>
+</tr>
+<tr>
+<td><strong>Dataset</strong></td>
+<td>Piecuch &amp; Żabiński, <em>Scientific Data</em> 12, 650 (2025), CC BY 4.0</td>
+</tr>
+<tr>
+<td><strong>Code and artifacts</strong></td>
+<td>This repository (<code>milling-cep/</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Executive summary</h2>
+<p>This project builds an AI safety monitor for CNC milling. The public dataset used by Piecuch and
+Żabiński contains 968 milling cycles recorded with eight accelerometer channels and twelve current
+channels, under two radial depth-of-cut (RDOC) settings: an optimal 4.5 mm and an aggressive 8 mm.
+Instead of reproducing the authors' tool-wear model, this CEP treats RDOC as a categorical target and
+asks a new engineering question: <strong>can a model detect a non-optimal, high-risk cut from the sensor
+signature alone, before the condition damages the tool or the machine?</strong></p>
+<p>A random forest was selected from four candidates after grouped validation. At a tuned threshold of
+0.444 it flags <strong>96.2 %</strong> of dangerous cycles (204 of 212) with <strong>69.9 %</strong> precision and an MCC of
+<strong>0.762</strong>. Leave-one-tool-out validation gives the same recall (0.962) and MCC 0.778, and a model
+trained without experiments P002 and P108 flags 97.8 % of the unseen dangerous experiment while
+clearing 100 % of the unseen optimal experiment. The main residual risk is a high false-alarm rate on
+one optimal tool (tool 7), which is traced to the dataset's confounded design: RDOC is constant within
+each tool and experiment, so tool identity, material batch and wear stage cannot be fully separated
+from the cutting condition.</p>
+<p>The work delivers cleaned and audited data, a reproducible notebook, eleven publication-quality
+figures, a Streamlit dashboard, Tableau-ready extracts with a build guide, and this report.</p>
+<hr />
+<h2>1. Engineering problem formulation</h2>
+<h3>1.1 Context</h3>
+<p>In CNC milling, the radial depth of cut controls how much of the cutter's diameter engages the
+workpiece. A conservative engagement (RDOC = 4.5 mm on a 10 mm cutter) is stable and is used for
+normal production. A very large engagement (RDOC = 8 mm, i.e. 80 % of the diameter) raises the chip
+load, the cutting force and the spindle torque. If the setup, holder or fixture is not stiff enough,
+the result is chatter, overload, accelerated tool wear, scrap or a broken tool. The operator normally
+knows the programmed parameters, but a process monitor does not: it sees only vibration and current.
+The engineering value of the model is as an independent check that the machine is running the
+condition it is supposed to run, and as an alarm when an aggressive parameter set is used
+unintentionally or without the matching tool.</p>
+<h3>1.2 Objective and task type</h3>
+<p><strong>Objective:</strong> classify each milling cycle as <em>optimal</em> (RDOC = 4.5 mm) or <em>non-optimal / dangerous</em>
+(RDOC = 8 mm) from the accelerometer and current statistics of that cycle.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Task</td>
+<td>Supervised binary <strong>classification</strong> (not regression, not wear estimation)</td>
+</tr>
+<tr>
+<td>Target</td>
+<td><code>RDOC_class = 1</code> if RDOC = 8 mm, <code>0</code> if RDOC = 4.5 mm</td>
+</tr>
+<tr>
+<td>Inputs</td>
+<td>120 sensor statistics: 8 accelerometer channels and 12 current channels, each with min, max, mean, std, skew and kurtosis</td>
+</tr>
+<tr>
+<td>Unit of analysis</td>
+<td>One milling cycle (<code>Pxxx_Fyy_Czz</code>)</td>
+</tr>
+<tr>
+<td>Grouping unit</td>
+<td>Cutting tool (<code>ToolIndex</code>) — the leakage-safe validation unit</td>
+</tr>
+<tr>
+<td>Positive class</td>
+<td>Dangerous (minority: 212 of 968 cycles, 21.9 %)</td>
+</tr>
+<tr>
+<td>Operational decision</td>
+<td>Flag the cycle for operator attention; not an automatic machine stop</td>
+</tr>
+</tbody>
+</table>
+<p>The task is a <strong>process-monitoring</strong> problem, not a tool-life problem. It is deliberately different
+from the source paper's wear regression and uses a target that the original authors did not model,
+which satisfies the CEP requirement for a novel analysis on an open dataset.</p>
+<h3>1.3 Significance of the variables</h3>
+<p>A larger radial engagement increases the engaged cutting-edge length and the chip cross-section.
+Cutting force and spindle torque rise roughly proportionally, which appears as a higher mean
+spindle/drive current, greater current fluctuation and higher vibration amplitude. The mean of the
+drive-axis acceleration is sensitive to the static force offset; the standard deviation of the drive
+and spindle currents is sensitive to load fluctuation; kurtosis and skew capture impulsive or
+chattering behaviour. These statistics are therefore not arbitrary features: they are the signatures
+that cutting mechanics predicts should change with RDOC.</p>
+<hr />
+<h2>2. Dataset</h2>
+<h3>2.1 Source and licence</h3>
+<p>Piecuch, M. &amp; Żabiński, T., <em>A new open dataset from a milling process – data for classification and
+estimation of tool life</em>, <strong>Scientific Data 12, 650 (2025)</strong>.
+DOI: <a href="https://doi.org/10.1038/s41597-025-04923-y">10.1038/s41597-025-04923-y</a></p>
+<p>Data archive: DOI <a href="https://doi.org/10.6084/m9.figshare.28589216">10.6084/m9.figshare.28589216</a>,
+licensed <strong>CC BY 4.0</strong>. Accessed October 2026. The raw files are kept unchanged in <code>data/raw/</code>
+(<code>FeatureAndMetadata_Milling.csv</code>, <code>metadata.xlsx</code>); the raw 25 GB time-series archive is not
+redistributed and was not available locally.</p>
+<h3>2.2 Structure</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Milling cycles (rows)</td>
+<td style="text-align: right;">968</td>
+</tr>
+<tr>
+<td>Experiments (workpieces)</td>
+<td style="text-align: right;">24</td>
+</tr>
+<tr>
+<td>Layers</td>
+<td style="text-align: right;">172</td>
+</tr>
+<tr>
+<td>Cutting tools</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr>
+<td>Sensor statistics</td>
+<td style="text-align: right;">120</td>
+</tr>
+<tr>
+<td>Source metadata columns</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr>
+<td>Accelerometer channels</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr>
+<td>Current channels</td>
+<td style="text-align: right;">12</td>
+</tr>
+<tr>
+<td>Constant process settings</td>
+<td style="text-align: right;">3200 rpm, 640 mm/min, 10 mm cutter</td>
+</tr>
+<tr>
+<td>Dangerous cycles</td>
+<td style="text-align: right;">212 (21.9 %)</td>
+</tr>
+<tr>
+<td>Optimal cycles</td>
+<td style="text-align: right;">756 (78.1 %)</td>
+</tr>
+<tr>
+<td>Experiments / tools with both classes</td>
+<td style="text-align: right;">0 / 0</td>
+</tr>
+</tbody>
+</table>
+<p>Two independent sources (the feature CSV and <code>metadata.xlsx</code>) were cross-checked row for row. All
+nine shared metadata fields, the row order and the row count (968) match exactly, so the merge cannot
+silently misalign a cycle with its metadata.</p>
+<hr />
+<h2>3. Data audit and preprocessing</h2>
+<h3>3.1 Audit findings</h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+<th>Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Missing values</td>
+<td>0</td>
+<td>None needed</td>
+</tr>
+<tr>
+<td>Duplicate full rows</td>
+<td>0</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Duplicate sensor vectors</td>
+<td>0</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Infinite sensor values</td>
+<td>0</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Zero-variance sensor features</td>
+<td>0</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Constant predictors</td>
+<td><code>ToolRotation</code>, <code>FeedRate</code>, <code>ToolDiameter</code></td>
+<td>Excluded — no information</td>
+</tr>
+<tr>
+<td>Censored cycles (<code>CycleToFailure = 0</code>)</td>
+<td>14</td>
+<td>Retained — valid failure records</td>
+</tr>
+<tr>
+<td>Single-cycle experiment</td>
+<td>P114</td>
+<td>Retained — genuine early failure</td>
+</tr>
+<tr>
+<td>Accelerometer values at the ADC floor</td>
+<td>4 rows</td>
+<td>Retained — genuine clipping</td>
+</tr>
+<tr>
+<td>Rows with ≥ 5 features outside a 5×IQR fence</td>
+<td>52</td>
+<td>Flagged, <strong>not deleted</strong></td>
+</tr>
+<tr>
+<td>Experiments / tools containing both classes</td>
+<td>0 / 0</td>
+<td>Grouped validation required</td>
+</tr>
+<tr>
+<td>Tool type 2 at RDOC = 8 mm</td>
+<td>0 cycles</td>
+<td>Discussed as a confound</td>
+</tr>
+</tbody>
+</table>
+<p>The raw CSV has a UTF-8 BOM, a semicolon delimiter, a redundant first header row and mixed decimal
+conventions (comma decimals in metadata, dot decimals in sensor columns). These were parsed
+explicitly; the real header is on row 2. No row was deleted. Deleting the censored records, the
+single-cycle failure or the statistical outliers would remove exactly the difficult cases a safety
+monitor must handle, and the source paper treats them as valid observations.</p>
+<h3>3.2 Target and feature preparation</h3>
+<ul>
+<li><strong>Target:</strong> <code>RDOC_class = 1</code> for RDOC = 8 mm, <code>0</code> for 4.5 mm.</li>
+<li><strong>Features:</strong> the 120 sensor statistics only. Identifiers, process settings, hardness, tool
+  metadata and remaining-life counters are excluded, so the model cannot read the answer or a
+  wear proxy directly.</li>
+<li><strong>Transform:</strong> <code>signed_log1p(x) = sign(x)·ln(1+|x|)</code> compresses the very large raw ADC counts while
+  preserving sign. It is applied to every feature for every model.</li>
+<li><strong>Scaling:</strong> robust scaling (median/IQR) is added for logistic regression only; tree models do not
+  need it.</li>
+<li><strong>Imbalance:</strong> balanced class weights (logistic regression, random forest) and threshold selection.
+  No SMOTE or random oversampling, because synthetic sensor vectors would no longer correspond to
+  physically achievable cutting states.</li>
+<li><strong>Feature selection:</strong> none. The models regularise or split on 120 correlated features directly;
+  removing features on the full data before cross-validation would leak information.</li>
+</ul>
+<h3>3.3 Validation design</h3>
+<p>RDOC and ADOC are <strong>constant within every experiment and every tool</strong>. A random row split therefore
+places cycles from the same tool in both training and test, and a flexible model can memorise that
+tool's signature. This is leakage through grouping, not through a feature column.</p>
+<p>Four schemes are used:</p>
+<ol>
+<li><strong>5-fold tool-group cross-validation (primary).</strong> Whole tools are held out; each fold contains at
+   least one dangerous and one optimal tool. Hyperparameters are tuned inside each outer fold on the
+   training tools only (nested grouped CV), so the outer estimate never sees the held-out tool during
+   tuning.</li>
+<li><strong>Leave-one-tool-out (stress test).</strong> Fourteen folds, one tool each. This is the closest available
+   proxy for deploying on a tool the model has never seen.</li>
+<li><strong>Leave-one-experiment-out (sensitivity).</strong> Twenty-four folds; tests generalisation to a new
+   workpiece/layer structure.</li>
+<li><strong>Random 5-fold (leakage control only).</strong> Reported to quantify how optimistic a naive split is; it
+   is never used to select the model or quote performance.</li>
+</ol>
+<p>A chronological split is not appropriate here: the rows are individual cycles grouped by tool and
+experiment, not a continuous time series of one process, and the source file is ordered by
+experiment. A chronological cut would put whole tools and conditions on one side and reproduce the
+same confounding in a less controlled way. Grouping by tool is the technically justified split.</p>
+<h3>3.4 Leakage control: what the random split would have claimed</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th style="text-align: right;">ROC-AUC</th>
+<th style="text-align: right;">PR-AUC</th>
+<th style="text-align: right;">Recall</th>
+<th style="text-align: right;">MCC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Random forest, random 5-fold</td>
+<td style="text-align: right;">0.998</td>
+<td style="text-align: right;">0.994</td>
+<td style="text-align: right;">0.976</td>
+<td style="text-align: right;">0.933</td>
+</tr>
+<tr>
+<td>Random forest, tool-grouped 5-fold</td>
+<td style="text-align: right;">0.942</td>
+<td style="text-align: right;">0.688</td>
+<td style="text-align: right;">0.892</td>
+<td style="text-align: right;">0.742</td>
+</tr>
+<tr>
+<td>Hist gradient boosting, random 5-fold</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">0.986</td>
+<td style="text-align: right;">0.988</td>
+</tr>
+<tr>
+<td>Hist gradient boosting, tool-grouped 5-fold</td>
+<td style="text-align: right;">0.936</td>
+<td style="text-align: right;">0.782</td>
+<td style="text-align: right;">0.877</td>
+<td style="text-align: right;">0.650</td>
+</tr>
+</tbody>
+</table>
+<p>The random split inflates ROC-AUC by about 0.06 and PR-AUC by about 0.21–0.31. Presenting the
+random-split number would have been a serious methodological error, so the grouped results are used
+throughout this report.</p>
+<hr />
+<h2>4. Exploratory analysis and engineering insights</h2>
+<p><img alt="Class balance and the tool/RDOC confounding" src="../figures/fig01_class_balance.png" /></p>
+<p><img alt="Every tool and experiment has a single RDOC/ADOC condition" src="../figures/fig02_tool_condition_confounding.png" /></p>
+<p><img alt="Distributions of the strongest sensor statistics" src="../figures/fig03_top_sensor_distributions.png" /></p>
+<p><img alt="Correlation structure and PCA of the sensor features" src="../figures/fig04_pca_correlation.png" /></p>
+<p><img alt="Remaining tool life versus class" src="../figures/fig05_wear_confound.png" /></p>
+<p><img alt="Univariate separation of the strongest features" src="../figures/fig06_univariate_auc.png" /></p>
+<h3>Insight 1 — the dangerous condition is a minority, so accuracy is misleading</h3>
+<p>Only 212 of 968 cycles (21.9 %), 8 of 24 experiments and 5 of 14 tools operate at RDOC = 8 mm. A
+classifier that always predicts "optimal" already scores 78.1 % accuracy while catching zero dangerous
+cycles. The report therefore leads with recall on the dangerous class, PR-AUC, MCC and the confusion
+matrix, and treats accuracy as a secondary descriptive number.</p>
+<h3>Insight 2 — RDOC is perfectly confounded with tool and experiment identity</h3>
+<p>Every tool and every experiment uses exactly one RDOC/ADOC combination. Tool type 2 is never used at
+RDOC = 8 mm, so the dangerous class is also entirely tool type 1. The dangerous group has a lower mean
+hardness (about 38 HRC versus 39 HRC) and a different remaining-life distribution. A model can
+therefore separate the classes by recognising the tool or the material rather than the cut. Grouped
+validation limits the optimism, but the confound cannot be removed by modelling; it is a property of
+the experimental design.</p>
+<h3>Insight 3 — the sensor signal is strong and physically plausible</h3>
+<p>The strongest univariate features are the mean acceleration on the drive axes (AUC 0.935–0.939) and
+the standard deviation of the drive/spindle currents (AUC 0.894–0.913). All are higher in the
+dangerous class. That is the direction cutting mechanics predicts for a larger radial engagement, so
+the separation is not an artefact of a few extreme rows.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th style="text-align: right;">Univariate ROC-AUC</th>
+<th>Direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accelerometer – Y driving axle +Y – mean</td>
+<td style="text-align: right;">0.939</td>
+<td>higher in dangerous</td>
+</tr>
+<tr>
+<td>Accelerometer – X driving axle +Z – mean</td>
+<td style="text-align: right;">0.935</td>
+<td>higher in dangerous</td>
+</tr>
+<tr>
+<td>Current – driving axle X L1 – std</td>
+<td style="text-align: right;">0.913</td>
+<td>higher in dangerous</td>
+</tr>
+<tr>
+<td>Current – driving axle X L3 – std</td>
+<td style="text-align: right;">0.913</td>
+<td>higher in dangerous</td>
+</tr>
+<tr>
+<td>Current – driving axle X L2 – std</td>
+<td style="text-align: right;">0.913</td>
+<td>higher in dangerous</td>
+</tr>
+<tr>
+<td>Current – spindle L1 – std</td>
+<td style="text-align: right;">0.894</td>
+<td>higher in dangerous</td>
+</tr>
+<tr>
+<td>Current – spindle L2 – std</td>
+<td style="text-align: right;">0.894</td>
+<td>higher in dangerous</td>
+</tr>
+<tr>
+<td>Current – spindle L3 – std</td>
+<td style="text-align: right;">0.894</td>
+<td>higher in dangerous</td>
+</tr>
+</tbody>
+</table>
+<h3>Insight 4 — wear is a competing explanation</h3>
+<p>Dangerous tools fail sooner: mean cycles to failure 22.7 versus 55.8 for optimal tools. Sensor
+features also drift as a tool wears, so part of the class separation may reflect wear stage rather
+than RDOC. The probability-versus-remaining-life view in the dashboard makes this visible; it is
+treated as a limitation, not hidden. The false alarms on tool 7 cluster late in tool life (mean
+normalised life 0.33), which is consistent with wear pushing an optimal tool into a
+dangerous-looking signature.</p>
+<h3>Insight 5 — material and tool type differ by class</h3>
+<p>Tool type 2 never appears at RDOC = 8 mm, and the dangerous group has lower hardness. These
+differences are plausible false-positive drivers: an optimal cut with a harder workpiece can produce
+higher forces and currents, and the model has no hardness input to distinguish the two causes. This
+is another reason to present the model as a screening alarm rather than a definitive diagnosis.</p>
+<hr />
+<h2>5. Models and validation</h2>
+<h3>5.1 Candidate models and justification</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Why it is appropriate</th>
+<th>Configuration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dummy (prior)</td>
+<td>Establishes the no-skill baseline for this class balance</td>
+<td>Predicts the majority class</td>
+</tr>
+<tr>
+<td>Logistic regression</td>
+<td>Transparent linear reference; tests whether a simple decision boundary is enough with 120 correlated, heavy-tailed features</td>
+<td>Balanced class weights, robust scaling, <code>C</code> tuned</td>
+</tr>
+<tr>
+<td>Random forest</td>
+<td>Captures thresholds and interactions across correlated vibration/current channels without hand-crafted features; robust to outliers and to the large ADC scale after the log transform</td>
+<td>150 trees, balanced subsample weights, depth and leaf size tuned</td>
+</tr>
+<tr>
+<td>Histogram gradient boosting</td>
+<td>Strong modern tabular learner; tests whether boosting beats bagging on this dataset</td>
+<td>Learning rate, leaf nodes and L2 tuned</td>
+</tr>
+</tbody>
+</table>
+<p>All four were evaluated on exactly the same folds and the same feature matrix.</p>
+<h3>5.2 Primary comparison (5-fold tool-group CV, threshold 0.5)</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th style="text-align: right;">ROC-AUC</th>
+<th style="text-align: right;">PR-AUC</th>
+<th style="text-align: right;">Recall</th>
+<th style="text-align: right;">Precision</th>
+<th style="text-align: right;">F1</th>
+<th style="text-align: right;">Specificity</th>
+<th style="text-align: right;">MCC</th>
+<th style="text-align: right;">Brier</th>
+<th style="text-align: right;">Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dummy (prior)</td>
+<td style="text-align: right;">0.386</td>
+<td style="text-align: right;">0.184</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.173</td>
+<td style="text-align: right;">0.781</td>
+</tr>
+<tr>
+<td>Logistic regression</td>
+<td style="text-align: right;">0.940</td>
+<td style="text-align: right;">0.733</td>
+<td style="text-align: right;">0.948</td>
+<td style="text-align: right;">0.663</td>
+<td style="text-align: right;">0.781</td>
+<td style="text-align: right;">0.865</td>
+<td style="text-align: right;">0.725</td>
+<td style="text-align: right;">0.093</td>
+<td style="text-align: right;">0.883</td>
+</tr>
+<tr>
+<td><strong>Random forest</strong></td>
+<td style="text-align: right;"><strong>0.942</strong></td>
+<td style="text-align: right;">0.688</td>
+<td style="text-align: right;">0.892</td>
+<td style="text-align: right;"><strong>0.724</strong></td>
+<td style="text-align: right;"><strong>0.799</strong></td>
+<td style="text-align: right;"><strong>0.905</strong></td>
+<td style="text-align: right;"><strong>0.742</strong></td>
+<td style="text-align: right;"><strong>0.082</strong></td>
+<td style="text-align: right;"><strong>0.902</strong></td>
+</tr>
+<tr>
+<td>Hist gradient boosting</td>
+<td style="text-align: right;">0.936</td>
+<td style="text-align: right;"><strong>0.782</strong></td>
+<td style="text-align: right;">0.877</td>
+<td style="text-align: right;">0.620</td>
+<td style="text-align: right;">0.727</td>
+<td style="text-align: right;">0.849</td>
+<td style="text-align: right;">0.650</td>
+<td style="text-align: right;">0.107</td>
+<td style="text-align: right;">0.855</td>
+</tr>
+</tbody>
+</table>
+<p>At the fixed 0.5 threshold the random forest has the best precision, F1, specificity, MCC, Brier and
+accuracy; logistic regression has slightly higher recall and a very similar ROC-AUC; gradient boosting
+has the best threshold-independent PR-AUC but the weakest operating point. Because a safety monitor
+can move its threshold, the selection was confirmed at the tuned operating point rather than at 0.5.</p>
+<h3>5.3 Threshold selection</h3>
+<p>The threshold was chosen on the pooled out-of-fold probabilities of the random forest by maximising
+F1. This gives <strong>0.4437</strong>, below 0.5 because the class is imbalanced and because a missed dangerous
+cut is more expensive than a false alarm.</p>
+<table>
+<thead>
+<tr>
+<th>Operating point</th>
+<th style="text-align: right;">Threshold</th>
+<th style="text-align: right;">Recall</th>
+<th style="text-align: right;">Precision</th>
+<th style="text-align: right;">F1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Max-F1 (selected)</td>
+<td style="text-align: right;">0.444</td>
+<td style="text-align: right;">0.962</td>
+<td style="text-align: right;">0.699</td>
+<td style="text-align: right;">0.810</td>
+</tr>
+<tr>
+<td>Highest precision with recall ≥ 0.90</td>
+<td style="text-align: right;">0.499</td>
+<td style="text-align: right;">0.901</td>
+<td style="text-align: right;">0.726</td>
+<td style="text-align: right;">0.803</td>
+</tr>
+</tbody>
+</table>
+<p>Raising the threshold to 0.499 buys 2.7 points of precision but costs 6.1 points of recall. For a
+safety application that is a bad trade, so 0.444 is retained. The dashboard exposes the threshold as
+a slider so the cost ratio can be changed by the user.</p>
+<h3>5.4 Selected model performance</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">5-fold tool groups</th>
+<th style="text-align: right;">Leave-one-tool-out</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Recall (dangerous)</td>
+<td style="text-align: right;">0.962</td>
+<td style="text-align: right;">0.962</td>
+</tr>
+<tr>
+<td>Precision (dangerous)</td>
+<td style="text-align: right;">0.699</td>
+<td style="text-align: right;">0.718</td>
+</tr>
+<tr>
+<td>F1 (dangerous)</td>
+<td style="text-align: right;">0.810</td>
+<td style="text-align: right;">0.823</td>
+</tr>
+<tr>
+<td>MCC</td>
+<td style="text-align: right;">0.762</td>
+<td style="text-align: right;">0.778</td>
+</tr>
+<tr>
+<td>Balanced accuracy</td>
+<td style="text-align: right;">0.923</td>
+<td style="text-align: right;">0.928</td>
+</tr>
+<tr>
+<td>Specificity</td>
+<td style="text-align: right;">0.884</td>
+<td style="text-align: right;">0.894</td>
+</tr>
+<tr>
+<td>ROC-AUC</td>
+<td style="text-align: right;">0.942</td>
+<td style="text-align: right;">0.950</td>
+</tr>
+<tr>
+<td>PR-AUC</td>
+<td style="text-align: right;">0.688</td>
+<td style="text-align: right;">0.712</td>
+</tr>
+<tr>
+<td>Brier score</td>
+<td style="text-align: right;">0.082</td>
+<td style="text-align: right;">0.076</td>
+</tr>
+<tr>
+<td>Confusion matrix</td>
+<td style="text-align: right;">668 TP-optimal / 88 FP / 8 FN / 204 TP-dangerous</td>
+<td style="text-align: right;">676 / 80 / 8 / 204</td>
+</tr>
+</tbody>
+</table>
+<p>The two estimates agree closely, which is the important result: the model is not dependent on one
+particular grouping of tools. Leave-one-experiment-out is higher (ROC-AUC 0.983, PR-AUC 0.895),
+because experiments share tools and layers and are therefore an easier holdout than a new tool.</p>
+<p>The Brier score of 0.082 is low, but Figure 9 shows the probabilities are not perfectly calibrated:
+the model is conservative in the middle of the range and over-confident at the top (cycles scored
+around 0.87 are dangerous about 73 % of the time, not 87 %). Probabilities are therefore useful for
+ranking and for choosing a threshold, but they should not be read as exact risk without recalibration
+(Platt scaling or isotonic regression) on a larger tool sample.</p>
+<hr />
+<h2>6. Error analysis</h2>
+<h3>6.1 Confusion matrix and curves</h3>
+<p><img alt="Model comparison under grouped validation" src="../figures/fig07_model_comparison.png" /></p>
+<p><img alt="ROC and precision-recall curves" src="../figures/fig08_model_curves.png" /></p>
+<p><img alt="Confusion matrix and calibration of the selected model" src="../figures/fig09_confusion_calibration.png" /></p>
+<h3>6.2 Where the errors are</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Tool</th>
+<th>Actual class</th>
+<th style="text-align: right;">Cycles</th>
+<th style="text-align: right;">Mean P(dangerous)</th>
+<th style="text-align: right;">Flagged</th>
+<th>Error type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">2</td>
+<td>Dangerous</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">0.732</td>
+<td style="text-align: right;">100 %</td>
+<td>—</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td>Dangerous</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">0.746</td>
+<td style="text-align: right;">100 %</td>
+<td>—</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td>Dangerous</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">0.712</td>
+<td style="text-align: right;">92.7 %</td>
+<td>3 missed</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td>Dangerous</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">0.623</td>
+<td style="text-align: right;">94.1 %</td>
+<td>3 missed</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td>Dangerous</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">0.676</td>
+<td style="text-align: right;">92.9 %</td>
+<td>2 missed</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td>Optimal</td>
+<td style="text-align: right;">124</td>
+<td style="text-align: right;">0.563</td>
+<td style="text-align: right;"><strong>60.5 %</strong></td>
+<td><strong>75 false alarms</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td>Optimal</td>
+<td style="text-align: right;">116</td>
+<td style="text-align: right;">0.149</td>
+<td style="text-align: right;">5.2 %</td>
+<td>6 false alarms</td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td>Optimal</td>
+<td style="text-align: right;">149</td>
+<td style="text-align: right;">0.026</td>
+<td style="text-align: right;">0 %</td>
+<td>—</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td>Optimal</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">0.052</td>
+<td style="text-align: right;">0 %</td>
+<td>—</td>
+</tr>
+<tr>
+<td style="text-align: right;">11</td>
+<td>Optimal</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.022</td>
+<td style="text-align: right;">0 %</td>
+<td>—</td>
+</tr>
+<tr>
+<td style="text-align: right;">101</td>
+<td>Optimal</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">0.029</td>
+<td style="text-align: right;">0 %</td>
+<td>—</td>
+</tr>
+<tr>
+<td style="text-align: right;">102</td>
+<td>Optimal</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">0.006</td>
+<td style="text-align: right;">0 %</td>
+<td>—</td>
+</tr>
+<tr>
+<td style="text-align: right;">103</td>
+<td>Optimal</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">0.014</td>
+<td style="text-align: right;">0 %</td>
+<td>—</td>
+</tr>
+<tr>
+<td style="text-align: right;">105</td>
+<td>Optimal</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;">0.104</td>
+<td style="text-align: right;">5.6 %</td>
+<td>7 false alarms</td>
+</tr>
+</tbody>
+</table>
+<p><strong>False alarms (88).</strong> 75 come from optimal tool 7, 7 from tool 105 and 6 from tool 8. Tool 7 has a
+mean probability of 0.563, close to the dangerous tools, and its false alarms occur mostly late in
+tool life. Its hardness and geometry apparently produce a signature that overlaps the dangerous
+class. This is the single largest deployment risk: in a production cell it would trigger an
+inspection on roughly three of every five tool-7 cycles.</p>
+<p><strong>Missed dangerous cycles (8).</strong> Three from tool 4, three from tool 5 and two from tool 6, spread
+across tool life rather than confined to the first cycle. Their probabilities sit just below the
+threshold, so a small threshold reduction would recover them at the cost of more false alarms. No
+dangerous tool is systematically missed, which is better than losing an entire tool.</p>
+<p><img alt="Per-tool leave-one-tool-out probabilities" src="../figures/fig11_per_tool_probabilities.png" /></p>
+<p>Figure 11 makes the same point visually: the dangerous tools sit as compact high-probability boxes,
+while tool 7's optimal cycles overlap them.</p>
+<p>The asymmetry matters: 8 missed dangerous cycles out of 212 is a 3.8 % miss rate, while 88 false
+alarms out of 756 optimal cycles is an 11.6 % false-alarm rate. For a decision-support alarm that a
+human filters, this is an acceptable starting point; for an automatic stop it would not be.</p>
+<hr />
+<h2>7. What the model has learned</h2>
+<p><img alt="Permutation importance of the selected random forest" src="../figures/fig10_feature_importance.png" /></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Rank</th>
+<th>Feature</th>
+<th style="text-align: right;">Permutation importance (drop in ROC-AUC)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td>Accelerometer – X driving axle +Z – mean</td>
+<td style="text-align: right;">0.00085 ± 0.00026</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td>Accelerometer – Y driving axle +Y – mean</td>
+<td style="text-align: right;">0.00076 ± 0.00052</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td>Current – driving axle X L1 – std</td>
+<td style="text-align: right;">0.00034 ± 0.00038</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td>Current – driving axle X L2 – std</td>
+<td style="text-align: right;">0.00027 ± 0.00033</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td>Current – driving axle Y L3 – min</td>
+<td style="text-align: right;">0.00014 ± 0.00001</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td>Current – driving axle X L3 – std</td>
+<td style="text-align: right;">0.00013 ± 0.00020</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td>Current – spindle L2 – max</td>
+<td style="text-align: right;">0.00007 ± 0.00006</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td>Accelerometer – X driving axle +Z – kurtosis</td>
+<td style="text-align: right;">0.00006 ± 0.00008</td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td>Accelerometer – spindle +Y – mean</td>
+<td style="text-align: right;">0.00005 ± 0.00009</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td>Current – spindle L3 – max</td>
+<td style="text-align: right;">0.00005 ± 0.00004</td>
+</tr>
+</tbody>
+</table>
+<p>The absolute importances are small because the 120 features are highly correlated: shuffling one
+channel leaves the others to compensate. The ranking is what matters. The model relies on drive-axis
+mean acceleration and drive/spindle current variability, exactly the quantities that cutting mechanics
+says should rise with radial engagement. It does not rely on an identifier, a wear counter or a
+process setting, because those columns are not in the feature matrix.</p>
+<p>The top feature is the <strong>mean</strong> of the drive-axis acceleration, not a peak or a kurtosis. That makes
+sense for a static force offset: a deeper radial cut shifts the whole vibration signal upward, so its
+DC level is a robust indicator. Current <strong>standard deviation</strong> ranks next because a heavier, more
+interrupted cut produces a more variable load.</p>
+<hr />
+<h2>8. Demonstration on previously unseen cases</h2>
+<p>Two experiments were held out entirely: <strong>P002</strong> (RDOC = 8 mm, dangerous) and <strong>P108</strong> (RDOC = 4.5 mm,
+optimal). A fresh random forest with the selected hyperparameters was trained on the remaining 22
+experiments (841 cycles) and applied to the 127 held-out cycles.</p>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Actual class</th>
+<th style="text-align: right;">Cycles</th>
+<th style="text-align: right;">Mean P(dangerous)</th>
+<th style="text-align: right;">Min</th>
+<th style="text-align: right;">Max</th>
+<th style="text-align: right;">Flagged</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P002</td>
+<td>Dangerous</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">0.746</td>
+<td style="text-align: right;">0.439</td>
+<td style="text-align: right;">0.953</td>
+<td style="text-align: right;"><strong>97.8 %</strong> (45/46)</td>
+</tr>
+<tr>
+<td>P108</td>
+<td>Optimal</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">0.006</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.046</td>
+<td style="text-align: right;"><strong>0 %</strong> (0/81)</td>
+</tr>
+</tbody>
+</table>
+<p>The single P002 miss is the <strong>first cycle of the experiment</strong> (<code>P002_F01_C1</code>, P = 0.439, just below
+the 0.444 threshold). A fresh tool has not yet developed the wear-driven increase in vibration and
+current, so its first cut looks marginal. This is a genuine engineering find, not a random failure:
+it argues for a rolling window or a two-cycle confirmation logic rather than a per-cycle verdict at
+the start of a tool's life.</p>
+<p>The final saved model, which uses all 968 cycles, scores representative individual cycles through the
+same 120-feature interface a deployment would use:</p>
+<table>
+<thead>
+<tr>
+<th>Cycle</th>
+<th>Experiment / tool</th>
+<th>Actual</th>
+<th style="text-align: right;">P(dangerous)</th>
+<th>Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>P002_F12_C4</code></td>
+<td>P002 / tool 2</td>
+<td>Dangerous</td>
+<td style="text-align: right;">0.967</td>
+<td>Flag</td>
+</tr>
+<tr>
+<td><code>P108_F12_C7</code></td>
+<td>P108 / tool 102</td>
+<td>Optimal</td>
+<td style="text-align: right;">0.000</td>
+<td>Clear</td>
+</tr>
+</tbody>
+</table>
+<p>This satisfies the CEP requirement to demonstrate the final model on at least two previously unseen
+input cases, and it also tests a held-out experiment rather than a re-scored training row.</p>
+<hr />
+<h2>9. Engineering interpretation</h2>
+<p>The classifier behaves like a <strong>data-driven cutting-force monitor</strong>. When the radial engagement
+increases from 4.5 mm to 8 mm, the chip load and the cutting force rise, the drive and spindle
+currents increase and become more variable, and the drive-axis vibration shifts upward. The forest
+combines several correlated channels into a decision boundary that separates the two conditions with
+96 % recall at the selected operating point. The signal is therefore consistent with the mechanics
+of the process, not merely with the labels.</p>
+<p>The model's errors are also interpretable. Tool 7 is an optimal tool whose signature overlaps the
+dangerous class, especially late in life; tools 4–6 occasionally produce a dangerous signature that
+falls just below the threshold. Both patterns point to the same physical reality: wear, material
+hardness and tool geometry move the sensor signature in the same direction as RDOC. A classifier
+trained on a design where these factors are perfectly confounded cannot fully attribute the signal
+to RDOC alone.</p>
+<p><strong>Consequence of an error.</strong> A false negative means a dangerous cut continues: higher force, faster
+wear, possible chatter, scrap or tool breakage. A false positive means an unnecessary retract or
+inspection, which costs cycle time but protects the machine. The threshold is therefore set to favour
+recall, and the recommended use is a human-in-the-loop alarm, not an automatic stop.</p>
+<hr />
+<h2>10. Limitations and threats to validity</h2>
+<ol>
+<li><strong>Confounded experimental design (major).</strong> RDOC and ADOC are constant within each tool and
+   experiment. Tool geometry, material batch, hardness and wear stage are entangled with the target.
+   Grouped validation and held-out experiments reduce optimism but cannot establish that the model
+   responds to RDOC alone.</li>
+<li><strong>Wear confound (major).</strong> Dangerous tools fail sooner and sensor statistics drift with remaining
+   life. Part of the separation may be wear rather than cutting condition. The dashboard's
+   probability-versus-life view exposes this; a dedicated early-life-only analysis would be the next
+   step.</li>
+<li><strong>Small number of tools.</strong> 14 tools, only 5 dangerous. Each leave-one-tool-out fold removes a
+   substantial fraction of one class, and a single unusual tool (tool 7) drives most false alarms.</li>
+<li><strong>Pre-computed features, no raw waveforms.</strong> The 25 GB raw archive was not available, so the
+   window length, filtering and statistic set could not be optimised. The 120 statistics are the
+   authors' choices, not necessarily the best for this target.</li>
+<li><strong>Uncalibrated sensor units.</strong> Values are raw ADC counts. The model and threshold are specific to
+   this machine and acquisition chain; transferring them requires calibration to g and A and
+   re-validation.</li>
+<li><strong>Single machine and campaign.</strong> No independent machine, spindle or material set is available, so
+   external validity is unknown.</li>
+<li><strong>Threshold is a policy choice.</strong> 0.444 is the max-F1 point. A plant with different inspection and
+   scrap costs should choose a different operating point; the dashboard makes this explicit.</li>
+<li><strong>No causal claim.</strong> The model is a association-based alarm. It should not be described as proof
+   that RDOC causes the observed signature in every tool.</li>
+</ol>
+<hr />
+<h2>11. Recommendations</h2>
+<ol>
+<li><strong>Deploy as decision support.</strong> Require two consecutive flagged cycles or a short rolling mean
+   before retracting a tool. This directly addresses the P002 first-cycle miss and reduces nuisance
+   alarms from isolated cycles.</li>
+<li><strong>Add a tool-specific baseline.</strong> Compare each cycle with that tool's own early-life signature
+   (a z-score or residual) rather than a global threshold. This is the most promising way to reduce
+   the tool-7 false alarms.</li>
+<li><strong>Re-run a balanced confirmation experiment.</strong> Cut the same tool at both RDOC levels and vary
+   hardness independently. That design would break the confounding and turn the current association
+   into a defensible causal estimate.</li>
+<li><strong>Calibrate the channels.</strong> Convert accelerometer and current data to g and A, document the
+   acquisition settings, and re-validate before using the model on a second machine.</li>
+<li><strong>Tune the threshold to the shop-floor cost ratio.</strong> Expose recall, false-alarm rate and the
+   expected number of inspections per shift, and let maintenance/quality agree on the operating point.</li>
+<li><strong>Log the probability and top features per cycle.</strong> A process engineer needs to see <em>why</em> a cycle
+   was flagged; the dashboard's per-cycle sensor view and the permutation ranking support that.</li>
+<li><strong>Monitor drift.</strong> Re-check the score distribution monthly; a change in material, holder or
+   spindle shifts the sensor baseline and invalidates the threshold.</li>
+</ol>
+<hr />
+<h2>12. Deliverables and reproducibility</h2>
+<h3>12.1 Deliverables</h3>
+<table>
+<thead>
+<tr>
+<th>CEP requirement</th>
+<th>Delivered artifact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Raw dataset, unchanged</td>
+<td><code>data/raw/FeatureAndMetadata_Milling.csv</code>, <code>data/raw/metadata.xlsx</code></td>
+</tr>
+<tr>
+<td>Cleaned / transformed dataset</td>
+<td><code>data/processed/milling_clean.csv</code>, <code>features.csv</code>, <code>metadata.csv</code>, <code>folds.csv</code>, <code>sensor_long.csv</code></td>
+</tr>
+<tr>
+<td>Data audit and cleaning decisions</td>
+<td><code>data/processed/CLEANING_LOG.md</code>, <code>data/processed/audit.json</code>, <code>data/processed/data_dictionary.csv</code></td>
+</tr>
+<tr>
+<td>At least three visualisations</td>
+<td><code>figures/fig01</code>–<code>fig11</code> (11 figures)</td>
+</tr>
+<tr>
+<td>Three to five engineering insights</td>
+<td><code>reports/EDA_INSIGHTS.md</code>, Section 4 of this report</td>
+</tr>
+<tr>
+<td>At least three ML algorithms</td>
+<td>Dummy, logistic regression, random forest, histogram gradient boosting</td>
+</tr>
+<tr>
+<td>Leakage-safe training/testing</td>
+<td>Nested 5-fold tool-group CV, leave-one-tool-out, leave-one-experiment-out, random-split control</td>
+</tr>
+<tr>
+<td>Unseen-case demonstration</td>
+<td>Held-out experiments P002 and P108 (Section 8)</td>
+</tr>
+<tr>
+<td>Reproducible notebook</td>
+<td><code>notebooks/milling_cep_analysis.ipynb</code> (executed end to end, 0 errors)</td>
+</tr>
+<tr>
+<td>Interactive dashboard</td>
+<td><code>dashboard/app.py</code> (Streamlit, six tabs, threshold slider, scoring, upload)</td>
+</tr>
+<tr>
+<td>Tableau workbook support</td>
+<td><code>dashboard/tableau/*.csv</code> + <code>dashboard/tableau/README.md</code> build guide</td>
+</tr>
+<tr>
+<td>Technical report</td>
+<td><code>reports/TECHNICAL_REPORT.md</code> / <code>.pdf</code></td>
+</tr>
+<tr>
+<td>Presentation</td>
+<td><code>reports/presentation/MILLING_CEP_SLIDES.pptx</code> / <code>.pdf</code> (13 slides)</td>
+</tr>
+<tr>
+<td>Poster</td>
+<td><code>reports/poster/MILLING_CEP_POSTER.pdf</code> (A2)</td>
+</tr>
+<tr>
+<td>Notebook export</td>
+<td><code>notebooks/exports/milling_cep_analysis.html</code> / <code>.pdf</code></td>
+</tr>
+</tbody>
+</table>
+<p>The Streamlit app is the working interactive dashboard delivered with the project. The CEP brief
+names Tableau Public (or an approved alternative) for the dashboard; the Tableau-ready extracts and
+the step-by-step build guide allow the same views to be assembled in Tableau Public without
+re-deriving any numbers. The <code>.twbx</code> workbook itself is a binary Tableau artifact and must be built
+in Tableau Desktop/Public — it is not generated by the Python pipeline.</p>
+<h3>12.2 Reproduce</h3>
+<pre><code class="language-bash"># Python 3.12; dependencies in requirements.txt (numpy, pandas, scikit-learn,
+# matplotlib, seaborn, plotly, streamlit, joblib, jupyter)
+.venv/bin/python -m src.data                 # cleaning, audit, folds, long sensor table
+.venv/bin/python scripts/02_eda.py           # figures 01-06, EDA_INSIGHTS.md
+.venv/bin/python scripts/03_modeling.py      # model comparison, figures 07-10
+.venv/bin/python scripts/05_select_rf.py     # final model, threshold, unseen cases, figure 11
+.venv/bin/python scripts/06_tableau_export.py
+.venv/bin/jupyter nbconvert --to notebook --execute notebooks/milling_cep_analysis.ipynb
+streamlit run dashboard/app.py
+</code></pre>
+<p>Random seed: <code>20261025</code>. The notebook reproduces the same threshold (0.4437), the same selected-model
+metrics and the same unseen-case summary as the saved artifacts.</p>
+<h3>12.3 Environment</h3>
+<p>The project was developed with Python 3.12 in a local virtual environment. Hardware: ordinary laptop
+CPU, no GPU. The full modelling pipeline (03 + 05) runs in a few minutes; the executed notebook in
+about two minutes. The random forest is deliberately kept small (150 trees, depth ≤ 10) so the whole
+study is reproducible on a student machine.</p>
+<hr />
+<h2>13. Conclusion</h2>
+<p>A random forest can separate optimal from non-optimal milling conditions from vibration and current
+statistics with 96 % recall and an MCC of 0.76 under tool-grouped validation, and it generalises to
+held-out experiments. The result is engineering-plausible: the model keys on drive-axis mean
+acceleration and current variability, the quantities that cutting mechanics predicts will rise with
+radial engagement. The main caveat is equally clear: because RDOC is confounded with tool identity,
+material and wear, the model is a strong screening alarm rather than a causal instrument. With a
+tool-specific baseline, two-cycle confirmation logic, calibrated sensors and a balanced confirmation
+experiment, it could become a practical shop-floor safety monitor.</p>
+<hr />
+<h2>References</h2>
+<ol>
+<li>Piecuch, M. &amp; Żabiński, T. A new open dataset from a milling process – data for classification and estimation of tool life. <em>Scientific Data</em> <strong>12</strong>, 650 (2025). https://doi.org/10.1038/s41597-025-04923-y</li>
+<li>Piecuch, M. &amp; Żabiński, T. Dataset for the above article. Figshare (2025). https://doi.org/10.6084/m9.figshare.28589216 (CC BY 4.0).</li>
+<li>Pedregosa, F. et al. Scikit-learn: Machine learning in Python. <em>Journal of Machine Learning Research</em> <strong>12</strong>, 2825–2830 (2011).</li>
+<li>Breiman, L. Random forests. <em>Machine Learning</em> <strong>45</strong>, 5–32 (2001).</li>
+<li>Saito, T. &amp; Rehmsmeier, M. The precision-recall plot is more informative than the ROC plot when evaluating binary classifiers on imbalanced datasets. <em>PLOS ONE</em> <strong>10</strong>, e0118432 (2015).</li>
+<li>Chicco, D. &amp; Jurman, G. The advantages of the Matthews correlation coefficient (MCC) over F1 score and accuracy in binary classification evaluation. <em>BMC Genomics</em> <strong>21</strong>, 6 (2020).</li>
+<li>NED University of Engineering and Technology, Department of Mechanical Engineering. <em>ME-446 AI &amp; IoT, Complex Engineering Problem — Fall 2026</em> (course brief).</li>
+</ol></body></html>

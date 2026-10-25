@@ -1,0 +1,5 @@
+FileName,ExperimentID,ToolIndex,MillingToolType,CycleToFailure,RDOC_class,class_label,prob_dangerous,pred_dangerous,correct
+P002_F01_C1,P002,2,1,49,1,Non-optimal (RDOC 8 mm),0.4391282939353522,0,0
+P108_F01_C1,P108,102,2,84,0,Optimal (RDOC 4.5 mm),0.03661753479744489,0,1
+P002_F12_C4,P002,2,1,2,1,Non-optimal (RDOC 8 mm),0.8133193759851957,1,1
+P108_F12_C7,P108,102,2,1,0,Optimal (RDOC 4.5 mm),0.0,0,1

@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+.DS_Store
+*.log
+
+# Temporary render previews
+reports/**/preview/
+notebooks/exports/preview/
+notebooks/exports/*_print.html

@@ -1,0 +1,21 @@
+# Core analysis
+numpy==2.5.4
+pandas==3.1.0
+scipy==1.18.1
+scikit-learn==1.9.1
+joblib==1.6.0
+openpyxl==3.1.5
+
+# Figures and interactive dashboard
+matplotlib==3.11.2
+seaborn==0.13.2
+plotly==7.1.0
+streamlit==1.66.1
+pillow==13.0.0
+
+# Reproducible notebook and report conversion
+jupyter==1.1.1
+nbformat==5.11.1
+nbconvert==7.17.2
+markdown==3.11.2
+python-pptx==1.0.2

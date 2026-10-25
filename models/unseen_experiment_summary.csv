@@ -1,0 +1,3 @@
+ExperimentID,class_label,n_cycles,prob_mean,prob_min,prob_max,frac_predicted_dangerous,true_dangerous
+P002,Non-optimal (RDOC 8 mm),46,0.7460079427812838,0.4391282939353522,0.9531398353373878,0.9782608695652174,1
+P108,Optimal (RDOC 4.5 mm),81,0.005533848644370055,0.0,0.045706209256748134,0.0,0

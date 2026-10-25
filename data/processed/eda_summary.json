@@ -1,0 +1,119 @@
+{
+  "levels": {
+    "Cycles": {
+      "Optimal (RDOC 4.5 mm)": 756,
+      "Non-optimal (RDOC 8 mm)": 212
+    },
+    "Experiments": {
+      "Optimal (RDOC 4.5 mm)": 16,
+      "Non-optimal (RDOC 8 mm)": 8
+    },
+    "Tools": {
+      "Optimal (RDOC 4.5 mm)": 9,
+      "Non-optimal (RDOC 8 mm)": 5
+    }
+  },
+  "top_features": [
+    {
+      "feature": "Accelerometer - Y Driving axle +Y - mean",
+      "auc": 0.9390723270440252,
+      "separation": 0.9390723270440252,
+      "direction": "higher in dangerous",
+      "family": "Accelerometer",
+      "statistic": "mean"
+    },
+    {
+      "feature": "Accelerometer - X Driving axle +Z - mean",
+      "auc": 0.935316212438854,
+      "separation": 0.935316212438854,
+      "direction": "higher in dangerous",
+      "family": "Accelerometer",
+      "statistic": "mean"
+    },
+    {
+      "feature": "Current - Driving axle X L1 - std",
+      "auc": 0.9130727762803235,
+      "separation": 0.9130727762803235,
+      "direction": "higher in dangerous",
+      "family": "Current",
+      "statistic": "std"
+    },
+    {
+      "feature": "Current - Driving axle X L3 - std",
+      "auc": 0.9130291005291006,
+      "separation": 0.9130291005291006,
+      "direction": "higher in dangerous",
+      "family": "Current",
+      "statistic": "std"
+    },
+    {
+      "feature": "Current - Driving axle X L2 - std",
+      "auc": 0.9127171308775083,
+      "separation": 0.9127171308775083,
+      "direction": "higher in dangerous",
+      "family": "Current",
+      "statistic": "std"
+    },
+    {
+      "feature": "Current - Spindle L1 - std",
+      "auc": 0.8944918638314865,
+      "separation": 0.8944918638314865,
+      "direction": "higher in dangerous",
+      "family": "Current",
+      "statistic": "std"
+    },
+    {
+      "feature": "Current - Spindle L2 - std",
+      "auc": 0.8942859638614356,
+      "separation": 0.8942859638614356,
+      "direction": "higher in dangerous",
+      "family": "Current",
+      "statistic": "std"
+    },
+    {
+      "feature": "Current - Spindle L3 - std",
+      "auc": 0.8942485275032445,
+      "separation": 0.8942485275032445,
+      "direction": "higher in dangerous",
+      "family": "Current",
+      "statistic": "std"
+    },
+    {
+      "feature": "Accelerometer - Spindle +Y - mean",
+      "auc": 0.8887266646700609,
+      "separation": 0.8887266646700609,
+      "direction": "higher in dangerous",
+      "family": "Accelerometer",
+      "statistic": "mean"
+    },
+    {
+      "feature": "Current - Driving axle X L2 - min",
+      "auc": 0.11610574523310373,
+      "separation": 0.8838942547668963,
+      "direction": "lower in dangerous",
+      "family": "Current",
+      "statistic": "min"
+    }
+  ],
+  "wear": {
+    "feature": "Accelerometer - Y Driving axle +Y - mean",
+    "cycle_to_failure_by_class": {
+      "mean": {
+        "Non-optimal (RDOC 8 mm)": 22.67,
+        "Optimal (RDOC 4.5 mm)": 55.77
+      },
+      "median": {
+        "Non-optimal (RDOC 8 mm)": 22.0,
+        "Optimal (RDOC 4.5 mm)": 52.0
+      },
+      "min": {
+        "Non-optimal (RDOC 8 mm)": 0,
+        "Optimal (RDOC 4.5 mm)": 0
+      },
+      "max": {
+        "Non-optimal (RDOC 8 mm)": 53,
+        "Optimal (RDOC 4.5 mm)": 149
+      }
+    }
+  }
+}

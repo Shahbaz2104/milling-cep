@@ -1,0 +1,121 @@
+feature,auc,separation,direction,family,statistic
+Accelerometer - Y Driving axle +Y - mean,0.9390723270440252,0.9390723270440252,higher in dangerous,Accelerometer,mean
+Accelerometer - X Driving axle +Z - mean,0.935316212438854,0.935316212438854,higher in dangerous,Accelerometer,mean
+Current - Driving axle X L1 - std,0.9130727762803235,0.9130727762803235,higher in dangerous,Current,std
+Current - Driving axle X L3 - std,0.9130291005291006,0.9130291005291006,higher in dangerous,Current,std
+Current - Driving axle X L2 - std,0.9127171308775083,0.9127171308775083,higher in dangerous,Current,std
+Current - Spindle L1 - std,0.8944918638314865,0.8944918638314865,higher in dangerous,Current,std
+Current - Spindle L2 - std,0.8942859638614356,0.8942859638614356,higher in dangerous,Current,std
+Current - Spindle L3 - std,0.8942485275032445,0.8942485275032445,higher in dangerous,Current,std
+Accelerometer - Spindle +Y - mean,0.8887266646700609,0.8887266646700609,higher in dangerous,Accelerometer,mean
+Current - Driving axle X L2 - min,0.11610574523310373,0.8838942547668963,lower in dangerous,Current,min
+Accelerometer - X Driving axle -X - skew,0.13172606568832984,0.8682739343116701,lower in dangerous,Accelerometer,skew
+Accelerometer - X Driving axle +Z - kurtosis,0.8489255765199162,0.8489255765199162,higher in dangerous,Accelerometer,kurtosis
+Current - Driving axle Z L3 - std,0.8406708595387841,0.8406708595387841,higher in dangerous,Current,std
+Current - Driving axle Z L2 - std,0.8403152141359689,0.8403152141359689,higher in dangerous,Current,std
+Current - Driving axle Y L2 - min,0.16016209943096735,0.8398379005690326,lower in dangerous,Current,min
+Accelerometer - X Driving axle -X - kurtosis,0.8392794748926824,0.8392794748926824,higher in dangerous,Accelerometer,kurtosis
+Current - Driving axle Z L2 - max,0.8387366476989119,0.8387366476989119,higher in dangerous,Current,max
+Current - Driving axle Z L1 - std,0.8379754417490266,0.8379754417490266,higher in dangerous,Current,std
+Current - Driving axle Z L3 - max,0.8374201357691924,0.8374201357691924,higher in dangerous,Current,max
+Current - Spindle L1 - max,0.8364499101527404,0.8364499101527404,higher in dangerous,Current,max
+Current - Driving axle Z L1 - mean,0.8326532394928622,0.8326532394928622,higher in dangerous,Current,mean
+Current - Driving axle Z L3 - mean,0.8322414395527603,0.8322414395527603,higher in dangerous,Current,mean
+Current - Driving axle Z L1 - max,0.8293494808824997,0.8293494808824997,higher in dangerous,Current,max
+Current - Spindle L3 - max,0.8261299540780673,0.8261299540780673,higher in dangerous,Current,max
+Current - Driving axle Y L2 - std,0.8249039133473096,0.8249039133473096,higher in dangerous,Current,std
+Current - Driving axle Y L3 - std,0.8192822202256165,0.8192822202256165,higher in dangerous,Current,std
+Current - Driving axle Z L2 - mean,0.8184523809523809,0.8184523809523809,higher in dangerous,Current,mean
+Current - Driving axle Y L1 - std,0.8132362483777578,0.8132362483777578,higher in dangerous,Current,std
+Current - Spindle L2 - max,0.8117887091943695,0.8117887091943695,higher in dangerous,Current,max
+Current - Driving axle X L2 - max,0.8090776929220326,0.8090776929220326,higher in dangerous,Current,max
+Current - Driving axle X L1 - max,0.8058675252071479,0.8058675252071479,higher in dangerous,Current,max
+Current - Driving axle X L3 - max,0.8013346061695118,0.8013346061695118,higher in dangerous,Current,max
+Current - Spindle L2 - min,0.20103012378955776,0.7989698762104422,lower in dangerous,Current,min
+Current - Driving axle X L3 - kurtosis,0.20933163621842868,0.7906683637815713,lower in dangerous,Current,kurtosis
+Current - Spindle L1 - min,0.2121799191374663,0.7878200808625337,lower in dangerous,Current,min
+Current - Driving axle X L1 - kurtosis,0.21422955974842767,0.7857704402515724,lower in dangerous,Current,kurtosis
+Current - Driving axle X L1 - min,0.21685634421483477,0.7831436557851652,lower in dangerous,Current,min
+Current - Driving axle Z L3 - skew,0.2207060497154837,0.7792939502845163,lower in dangerous,Current,skew
+Current - Spindle L3 - min,0.22176674653089748,0.7782332534691025,lower in dangerous,Current,min
+Current - Driving axle X L2 - kurtosis,0.22304582210242588,0.7769541778975741,lower in dangerous,Current,kurtosis
+Current - Driving axle Z L1 - skew,0.22528576420085855,0.7747142357991414,lower in dangerous,Current,skew
+Current - Driving axle Z L3 - kurtosis,0.22564140960367376,0.7743585903963263,lower in dangerous,Current,kurtosis
+Current - Driving axle Z L2 - skew,0.22629030647898574,0.7737096935210143,lower in dangerous,Current,skew
+Current - Driving axle Z L1 - kurtosis,0.23002146351202954,0.7699785364879704,lower in dangerous,Current,kurtosis
+Current - Driving axle Z L2 - kurtosis,0.23029599680543078,0.7697040031945692,lower in dangerous,Current,kurtosis
+Accelerometer - Spindle +Y - std,0.23700958370769692,0.7629904162923031,lower in dangerous,Accelerometer,std
+Current - Driving axle Y L1 - min,0.25751534890685834,0.7424846510931417,lower in dangerous,Current,min
+Accelerometer - Y Driving axle +Y - min,0.7272230957372466,0.7272230957372466,higher in dangerous,Accelerometer,min
+Current - Driving axle X L2 - mean,0.717536438055306,0.717536438055306,higher in dangerous,Current,mean
+Current - Driving axle Y L1 - mean,0.7126946690625936,0.7126946690625936,higher in dangerous,Current,mean
+Accelerometer - Spindle -X - kurtosis,0.7121019267245682,0.7121019267245682,higher in dangerous,Accelerometer,kurtosis
+Current - Driving axle X L1 - skew,0.7113781571328741,0.7113781571328741,higher in dangerous,Current,skew
+Current - Driving axle X L3 - skew,0.7086078666267346,0.7086078666267346,higher in dangerous,Current,skew
+Current - Driving axle X L3 - mean,0.7081336727563142,0.7081336727563142,higher in dangerous,Current,mean
+Current - Driving axle Y L2 - mean,0.7067984426474992,0.7067984426474992,higher in dangerous,Current,mean
+Accelerometer - Y Driving axle -X - min,0.7059405261056204,0.7059405261056204,higher in dangerous,Accelerometer,min
+Current - Driving axle X L1 - mean,0.7056379155435759,0.7056379155435759,higher in dangerous,Current,mean
+Current - Driving axle X L2 - skew,0.7037660976340222,0.7037660976340222,higher in dangerous,Current,skew
+Accelerometer - Y Driving axle +Z - min,0.7004249026654688,0.7004249026654688,higher in dangerous,Accelerometer,min
+Accelerometer - X Driving axle +Z - skew,0.29977163821503444,0.7002283617849656,lower in dangerous,Accelerometer,skew
+Current - Driving axle Z L3 - min,0.6992706149545772,0.6992706149545772,higher in dangerous,Current,min
+Accelerometer - Y Driving axle +Z - max,0.31182614555256066,0.6881738544474394,lower in dangerous,Accelerometer,max
+Current - Driving axle Y L3 - mean,0.6865952880103824,0.6865952880103824,higher in dangerous,Current,mean
+Current - Driving axle Y L1 - max,0.6849699261255865,0.6849699261255865,higher in dangerous,Current,max
+Accelerometer - Y Driving axle -X - max,0.3169486872317061,0.6830513127682939,lower in dangerous,Accelerometer,max
+Current - Driving axle Y L2 - max,0.6809080812618549,0.6809080812618549,higher in dangerous,Current,max
+Current - Driving axle Y L3 - max,0.6781970649895178,0.6781970649895178,higher in dangerous,Current,max
+Accelerometer - X Driving axle -X - min,0.32878793550963364,0.6712120644903663,lower in dangerous,Accelerometer,min
+Accelerometer - X Driving axle -X - std,0.32927772786263354,0.6707222721373665,lower in dangerous,Accelerometer,std
+Accelerometer - Y Driving axle +Y - max,0.3392108415693321,0.6607891584306679,lower in dangerous,Accelerometer,max
+Accelerometer - Spindle +Y - min,0.6486098632325047,0.6486098632325047,higher in dangerous,Accelerometer,min
+Current - Driving axle X L3 - min,0.3516116352201258,0.6483883647798743,lower in dangerous,Current,min
+Accelerometer - Spindle +Y - skew,0.6472995906958171,0.6472995906958171,higher in dangerous,Accelerometer,skew
+Accelerometer - Spindle -X - max,0.6453217031047219,0.6453217031047219,higher in dangerous,Accelerometer,max
+Current - Spindle L1 - kurtosis,0.6406858340820605,0.6406858340820605,higher in dangerous,Current,kurtosis
+Accelerometer - Y Driving axle +Y - std,0.3602001597284616,0.6397998402715384,lower in dangerous,Accelerometer,std
+Current - Spindle L3 - kurtosis,0.6394753918338824,0.6394753918338824,higher in dangerous,Current,kurtosis
+Current - Spindle L2 - kurtosis,0.6392445342917041,0.6392445342917041,higher in dangerous,Current,kurtosis
+Accelerometer - Spindle -X - min,0.36210941399620644,0.6378905860037936,lower in dangerous,Accelerometer,min
+Accelerometer - Y Driving axle +Y - kurtosis,0.6342779774383548,0.6342779774383548,higher in dangerous,Accelerometer,kurtosis
+Accelerometer - X Driving axle +Z - std,0.36574074074074076,0.6342592592592593,lower in dangerous,Accelerometer,std
+Accelerometer - Spindle -X - mean,0.6319694020165718,0.6319694020165718,higher in dangerous,Accelerometer,mean
+Accelerometer - Y Driving axle -X - skew,0.6293613357292602,0.6293613357292602,higher in dangerous,Accelerometer,skew
+Current - Spindle L1 - skew,0.6292989417989417,0.6292989417989417,higher in dangerous,Current,skew
+Accelerometer - Y Driving axle +Z - std,0.3744384546271339,0.6255615453728661,lower in dangerous,Accelerometer,std
+Accelerometer - X Driving axle -X - mean,0.3757237695916941,0.6242762304083058,lower in dangerous,Accelerometer,mean
+Current - Spindle L3 - skew,0.6228723669761406,0.6228723669761406,higher in dangerous,Current,skew
+Accelerometer - Y Driving axle -X - std,0.37854397524208844,0.6214560247579115,lower in dangerous,Accelerometer,std
+Current - Driving axle Y L3 - min,0.38014437955475694,0.619855620445243,lower in dangerous,Current,min
+Current - Spindle L2 - skew,0.6192160826594789,0.6192160826594789,higher in dangerous,Current,skew
+Current - Driving axle Z L2 - min,0.3814515323949286,0.6185484676050714,lower in dangerous,Current,min
+Current - Driving axle Y L2 - kurtosis,0.38399720475192173,0.6160027952480782,lower in dangerous,Current,kurtosis
+Accelerometer - Spindle -Z - skew,0.38724168912848156,0.6127583108715184,lower in dangerous,Accelerometer,skew
+Accelerometer - Spindle +Y - kurtosis,0.38968753119696514,0.6103124688030348,lower in dangerous,Accelerometer,kurtosis
+Current - Spindle L3 - mean,0.6051899271238894,0.6051899271238894,higher in dangerous,Current,mean
+Current - Spindle L1 - mean,0.6050526604771888,0.6050526604771888,higher in dangerous,Current,mean
+Current - Spindle L2 - mean,0.604965308974743,0.604965308974743,higher in dangerous,Current,mean
+Accelerometer - Y Driving axle -X - kurtosis,0.39756788459618647,0.6024321154038135,lower in dangerous,Accelerometer,kurtosis
+Accelerometer - Spindle -Z - kurtosis,0.6007661974643107,0.6007661974643107,higher in dangerous,Accelerometer,kurtosis
+Accelerometer - Spindle -Z - max,0.5993404961565338,0.5993404961565338,higher in dangerous,Accelerometer,max
+Accelerometer - X Driving axle +Z - max,0.4038790306478986,0.5961209693521015,lower in dangerous,Accelerometer,max
+Current - Driving axle Y L1 - kurtosis,0.40520490166716583,0.5947950983328342,lower in dangerous,Current,kurtosis
+Current - Driving axle Y L3 - kurtosis,0.4066274832784267,0.5933725167215733,lower in dangerous,Current,kurtosis
+Current - Driving axle Y L3 - skew,0.5786350703803534,0.5786350703803534,higher in dangerous,Current,skew
+Accelerometer - Y Driving axle -X - mean,0.5773372766297294,0.5773372766297294,higher in dangerous,Accelerometer,mean
+Accelerometer - Y Driving axle +Y - skew,0.5749101527403414,0.5749101527403414,higher in dangerous,Accelerometer,skew
+Accelerometer - Y Driving axle +Z - mean,0.5679220325446741,0.5679220325446741,higher in dangerous,Accelerometer,mean
+Accelerometer - Spindle +Y - max,0.562010207647,0.562010207647,higher in dangerous,Accelerometer,max
+Accelerometer - Spindle -Z - std,0.5596485973844464,0.5596485973844464,higher in dangerous,Accelerometer,std
+Current - Driving axle Y L1 - skew,0.5590870520115803,0.5590870520115803,higher in dangerous,Current,skew
+Current - Driving axle Y L2 - skew,0.5570654886692622,0.5570654886692622,higher in dangerous,Current,skew
+Accelerometer - Spindle -Z - min,0.44331199460916443,0.5566880053908356,lower in dangerous,Accelerometer,min
+Accelerometer - Y Driving axle +Z - skew,0.44611660177697915,0.5538833982230209,lower in dangerous,Accelerometer,skew
+Current - Driving axle Z L1 - min,0.4482192772287112,0.5517807227712888,lower in dangerous,Current,min
+Accelerometer - X Driving axle +Z - min,0.5386935958869921,0.5386935958869921,higher in dangerous,Accelerometer,min
+Accelerometer - Spindle -X - skew,0.4688030348407707,0.5311969651592293,lower in dangerous,Accelerometer,skew
+Accelerometer - Spindle -X - std,0.5296183987221723,0.5296183987221723,higher in dangerous,Accelerometer,std
+Accelerometer - Spindle -Z - mean,0.5161849855246081,0.5161849855246081,higher in dangerous,Accelerometer,mean
+Accelerometer - Y Driving axle +Z - kurtosis,0.5101951682140361,0.5101951682140361,higher in dangerous,Accelerometer,kurtosis
+Accelerometer - X Driving axle -X - max,0.49073138165119295,0.5092686183488071,lower in dangerous,Accelerometer,max

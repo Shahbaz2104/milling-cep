@@ -1,0 +1,161 @@
+{
+  "dataset": {
+    "raw_file": "FeatureAndMetadata_Milling.csv",
+    "metadata_file": "metadata.xlsx",
+    "n_rows": 968,
+    "n_columns": 144,
+    "n_sensor_features": 120,
+    "n_metadata_source_columns": 11,
+    "n_experiments": 24,
+    "n_layers": 172,
+    "n_tools": 14,
+    "experiments": [
+      "P002",
+      "P003",
+      "P004",
+      "P006",
+      "P007",
+      "P008",
+      "P010",
+      "P011",
+      "P012",
+      "P014",
+      "P015",
+      "P016",
+      "P017",
+      "P023",
+      "P026",
+      "P033",
+      "P036",
+      "P038",
+      "P041",
+      "P108",
+      "P110",
+      "P112",
+      "P114",
+      "P119"
+    ],
+    "tools": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      101,
+      102,
+      103,
+      105
+    ]
+  },
+  "source_checks": {
+    "SampleIndex__vs__SampleIndex_xlsx": true,
+    "ToolIndex__vs__ToolIndex_xlsx": true,
+    "MillingToolType__vs__MillingToolType_xlsx": true,
+    "ADOC_mm__vs__ADOC_mm_xlsx": true,
+    "RDOC_mm__vs__RDOC_mm_xlsx": true,
+    "Hardness_HRC__vs__Hardness_HRC_xlsx": true,
+    "CycleToFailure__vs__CycleToFailure_xlsx": true,
+    "CycleToFailureNormalized__vs__CycleToFailureNormalized_xlsx": true,
+    "ToolHolderLength_mm__vs__ToolHolderLength_mm_xlsx": true,
+    "row_order_matches": true,
+    "row_counts": {
+      "csv": 968,
+      "xlsx": 968
+    }
+  },
+  "missing_values_total": 0,
+  "missing_values_by_column": {},
+  "duplicate_rows_full": 0,
+  "duplicate_sensor_rows": 0,
+  "infinite_sensor_values": 0,
+  "zero_variance_sensor_features": [],
+  "class_counts_cycles": {
+    "0": 756,
+    "1": 212
+  },
+  "class_ratio_cycles": {
+    "0": 0.781,
+    "1": 0.219
+  },
+  "class_counts_experiments": {
+    "0": 16,
+    "1": 8
+  },
+  "class_counts_tools": {
+    "0": 9,
+    "1": 5
+  },
+  "experiments_with_both_classes": 0,
+  "tools_with_both_classes": 0,
+  "tool_type_2_dangerous_cycles": 0,
+  "constant_metadata": {
+    "ToolRotation_rpm": true,
+    "FeedRate_mm_min": true,
+    "ToolDiameter_mm": true
+  },
+  "constant_metadata_values": {
+    "ToolRotation_rpm": 3200.0,
+    "FeedRate_mm_min": 640.0,
+    "ToolDiameter_mm": 10.0
+  },
+  "metadata_ranges": {
+    "ADOC_mm": [
+      5.0,
+      10.0
+    ],
+    "RDOC_mm": [
+      4.5,
+      8.0
+    ],
+    "Hardness_HRC": [
+      35.33,
+      41.67
+    ],
+    "ToolHolderLength_mm": [
+      80.0,
+      160.0
+    ],
+    "CycleToFailure": [
+      0.0,
+      149.0
+    ],
+    "NumberOfCycle": [
+      1.0,
+      150.0
+    ]
+  },
+  "adoc_rdoc_crosstab": {
+    "ADOC_5_RDOC_4.5": 472,
+    "ADOC_5_RDOC_8.0": 117,
+    "ADOC_10_RDOC_4.5": 284,
+    "ADOC_10_RDOC_8.0": 95
+  },
+  "censored_cycles_cycle_to_failure_zero": 14,
+  "single_cycle_experiments": [
+    "P114"
+  ],
+  "accelerometer_saturation_rows": 4,
+  "outlier_rows_any": 298,
+  "outlier_rows_flagged": 52,
+  "outlier_feature_count_max": 37,
+  "sensor_min": -32768.0,
+  "sensor_max": 462873.0,
+  "sensor_median_abs": 273.0,
+  "data_quality_issues": [
+    "CSV has a redundant first header row (Column1...Column131); real headers are on row 2.",
+    "Metadata columns use comma decimals while sensor columns use dot decimals.",
+    "ToolRotation, FeedRate and ToolDiameter are constant and cannot be useful predictors.",
+    "RDOC and ADOC are constant within every experiment and every tool; class is confounded with tool identity.",
+    "Milling tool type 2 is never associated with RDOC = 8 mm.",
+    "14 cycles have CycleToFailure = 0 (right-censored / failure cycle records).",
+    "P114_F01_C1 is a single-cycle early failure and an acknowledged outlier in the source paper.",
+    "Multiple accelerometer minimum values reach the 16-bit ADC floor (-32768), indicating clipping.",
+    "Sensor statistics are raw ADC-domain values, not calibrated g / A; conversion is documented in the source paper.",
+    "The 25 GB raw time-series archive is not available locally; this project uses the authors' processed feature matrix."
+  ]
+}
